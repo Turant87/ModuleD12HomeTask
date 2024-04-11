@@ -1,0 +1,12 @@
+{% extends 'layout/base.html' %}
+{% load custom_filters %}
+
+{% block content %}
+<div class="news-detail">
+
+    <a href="/news" class="btn btn-outline-primary btn-lg" >Все новости</a>
+    <a href="{% url 'news:post_create' %}" class="btn btn-outline-success btn-lg">Создать пост</a>
+    <br>
+    <a href="/news/search/" class="btn btn-outline-primary btn-lg">Поиск</a>
+</div>
+{% endblock %}

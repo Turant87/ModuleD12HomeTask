@@ -1,0 +1,14 @@
+{% extends 'layout/base.html' %}
+{% load custom_filters %}
+
+{% block content %}
+<div class="news-detail">
+    <form method="POST">
+   {% csrf_token %}
+   {{ form }}
+   <!-- Теперь нам нужна только готовая форма и кнопка -->
+   <input class="btn btn-outline-success bts-sm" type="submit" value="Изменить">
+</form>
+
+</div>
+{% endblock %}

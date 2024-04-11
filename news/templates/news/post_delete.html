@@ -1,0 +1,29 @@
+{% extends 'layout/base.html' %}
+
+
+{% block title %}
+Post delete
+{% endblock title %}
+
+{% block content %}
+
+<h3>Вы точно хотите удалить этот пост?</h3>
+<div class="card">
+ <div class="card-header">
+   <h3>
+     {{ post.name }}
+   </h3>
+   <div>
+     Title: <span class="badge bg-info">{{ post.title }}</span>
+   </div>
+ </div>
+ <div class="card-body">
+   {{ post.title }}
+ </div>
+</div>
+<form method="POST">
+ {% csrf_token %}
+   <input class="btn btn btn-outline-danger" type="submit" value="Удалить">
+</form>
+
+{% endblock content %}
