@@ -1,12 +1,36 @@
 {% extends 'layout/base.html' %}
 {% load custom_filters %}
 
+{% block title %}
+
+{% endblock %}
+
 {% block content %}
 <div class="news-detail">
+   <h1>Добро пожаловать на новостной портал</h1>
+   <h3>Страница авторизованного пользователя:  {{ request.user.username }}</h3>
+    <h3>Имя: {{ request.user.first_name }}</h3>
+    <h3>Activ: {{ request.user.is_active }}</h3>
+    {% for group in user.groups.all %}
+    {{ group.name }}
+{% endfor %}
 
-    <a href="/news" class="btn btn-outline-primary btn-lg" >Все новости</a>
-    <a href="{% url 'news:post_create' %}" class="btn btn-outline-success btn-lg">Создать пост</a>
-    <br>
-    <a href="/news/search/" class="btn btn-outline-primary btn-lg">Поиск</a>
+
+
+    <h3>Группа пользователя: {{ request.user.groups }}</h3>
+   <a href="{% url 'account_logout' %}" class="btn btn-outline-danger btn-sm" role="button">Выйти</a>
+   <div>
+
+      Здесь может содержаться персональная информация для каждого пользователя
+       <hr>
+       {% if is_not_authors %}
+             <h1> Работает!!!!!!!! </h1>
+        <a class="btn btn-info" href="{% url 'news:upgrade' %}">Стать Автором</a>
+{% else %}
+    <h3>Вы Автор</h3>
+{% endif %}
+
+
+   </div>
 </div>
 {% endblock %}

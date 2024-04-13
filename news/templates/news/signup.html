@@ -1,0 +1,18 @@
+{% extends 'layout/base.html' %}
+
+{% block title %}
+Регистрация нового пользователя
+{% endblock title %}
+
+{% block content %}
+<h2>
+ Зарегистрироваться
+</h2>
+<form method="post">
+{% csrf_token %}
+<table>
+{{ form.as_table }}
+</table>
+<input type="submit" value="Зарегистрироваться">
+</form>
+{% endblock content %}
