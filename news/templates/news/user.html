@@ -1,0 +1,25 @@
+{% extends 'layout/base.html' %}
+{% load custom_filters %}
+
+{% block title %}
+
+{% endblock %}
+
+{% block content %}
+<div class="news-detail">
+   <h1>Добро пожаловать на новостной портал {{ request.user.username }}</h1>
+    <hr>
+    <h3>{{ request.user.first_name }} Ваши группы: </h3>
+    {% for group in user.groups.all %}
+    {{ group.name }}
+{% endfor %}
+     <hr>
+       {% if is_not_authors %}
+        <a class="btn btn-info" href="{% url 'news:upgrade' %}">Стать Автором</a>
+{% else %}
+    <h3>Вы Автор</h3>
+{% endif %}
+    <hr>
+   <a href="{% url 'account_logout' %}" class="btn btn-outline-danger btn-sm" role="button">Выйти</a>
+</div>
+{% endblock %}

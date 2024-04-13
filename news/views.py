@@ -85,7 +85,7 @@ class RegisterView(CreateView):
    model = User
    form_class = RegisterForm
    template_name = 'news/signup.html'
-   success_url = '/'
+   success_url = 'news/user.html'
 
    def form_valid(self, form):
        user = form.save()
@@ -94,8 +94,15 @@ class RegisterView(CreateView):
        user.save()
        return super().form_valid(form)
 
-class IndexView(LoginRequiredMixin, TemplateView):
+class IndexView(TemplateView):
     template_name = 'news/home.html'
+    form_class = PostForm
+
+
+class UresView(LoginRequiredMixin, TemplateView):
+    template_name = 'news/user.html'
+    form_class = PostForm
+    success_url = reverse_lazy('news:user')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -109,7 +116,7 @@ def upgrade_me(request):
     authors_group = Group.objects.get(name='authors')
     if not request.user.groups.filter(name='authors').exists():
         authors_group.user_set.add(user)
-    return redirect('/')
+    return redirect('news/user.html')
 
 
 
@@ -117,7 +124,7 @@ class LoginView(FormView):
    model = User
    form_class = LoginForm
    template_name = 'news/login.html'
-   success_url = '/'
+   success_url = 'news/user.html'
 
    def form_valid(self, form):
        username = form.cleaned_data.get('username')

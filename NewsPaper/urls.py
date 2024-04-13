@@ -24,6 +24,7 @@ urlpatterns = [
     path('', home, name='home'),
     path('news/', include('news.urls')),
     path('sign/', include('news.urls')),
+    # path('user/', include('news.urls')),
     path('accounts/', include('allauth.urls')),
 
     # делаем так, чтобы все адреса из нашего приложения (fastfood/urls.py) сами автоматически подключались когда мы их добавим.
