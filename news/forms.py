@@ -9,12 +9,13 @@ from allauth.account.forms import SignupForm
 class PostForm(ModelForm):
     class Meta:
         model = Post
-        fields = ['name', 'author', 'title', 'categoryType', 'text']
+        fields = ['name', 'author', 'title', 'categoryType', 'postCategory', 'text']
         labels = {
             'name': 'Название',
             'author': 'Автор',
             'title': 'Заголовок',
             'categoryType': 'Категория',
+            'postCategory': 'Категория поста',
             'text': 'Текст',
         }
         widgets = {
@@ -30,6 +31,9 @@ class PostForm(ModelForm):
                 'placeholder': 'Введите заголовок'
             }),
             'categoryType': forms.Select(attrs={
+                'class': 'form-control',
+            }),
+            'postCategory': forms.Select(attrs={
                 'class': 'form-control',
             }),
             'text': forms.Textarea(attrs={

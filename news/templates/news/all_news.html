@@ -1,36 +1,34 @@
 {% extends 'layout/base.html' %}
 
-
-
 {% block content %}
 <h1>Все новости</h1>
 <p>Количество новостей: {{ posts|length }}</p>
 
-<!--<a href="/" class="btn btn-outline-primary bts-sm">На главную</a>-->
-<!--<a href="{% url 'news:post_create' %}" class="btn btn-outline-success bts-sm">Создать пост</a>-->
-<!--<a href="/news/search/" class="btn btn-outline-primary bts-sm">Поиск</a>-->
-
-
-<div class="news-list">
-    {% for post in posts %}
-    <div class="news-item">
-        <p>{{ post.dateCreation|date:"d.m.Y" }}</p>
+<table class="table">
+    <thead>
         <tr>
-            <td><a href="{% url 'news:news' post.pk %}">{{ post.text|truncatewords:20 }}</a></td>
+            <th>Дата</th>
+            <th>Название статьи</th>
+            <th>Категория</th>
+            <th>Автор</th>
+            <th>Действия</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for post in posts %}
+        <tr>
+            <td>{{ post.dateCreation|date:"d.m.Y" }}</td>
+            <td><a href="{% url 'news:news' post.pk %}">{{ post.title }}</a></td>
+            <td>{{ post.get_postCategory_display }}</td>
+            <td>{{ post.author.authorUser.username }}</td>
             <td>
                 <a href="{% url 'news:post_update' post.pk %}" class="btn btn-outline-primary btn-sm">Редактировать</a>
-                <a href="{% url 'news:post_delete' post.pk %}" class="btn btn btn-outline-danger btn-sm">Удалить</a>
+                <a href="{% url 'news:post_delete' post.pk %}" class="btn btn-outline-danger btn-sm">Удалить</a>
             </td>
         </tr>
-    </div>
-    {% endfor %}
-</div>
-<br>
+        {% endfor %}
+    </tbody>
+</table>
+
 {% include 'news/paginator.html' %}
-
-
-
-
 {% endblock %}
-
-

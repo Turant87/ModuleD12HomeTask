@@ -1,11 +1,10 @@
 from django.urls import path
 from django.contrib.auth.views import LoginView, LogoutView
-from .views import PostsList, PostsDetail, search_results, PostCreateView, PostUpdateView, PostDeleteView, home, RegisterView, IndexView, upgrade_me, UresView # импортируем наше представление
+from .views import PostsList, PostsDetail, search_results, PostCreateView, PostUpdateView, PostDeleteView, home, RegisterView, IndexView, upgrade_me, UresView, CategoryListView# импортируем наше представление
 
 app_name = 'news'
 
 urlpatterns = [
-    # path -- означает путь. В данном случае путь ко всем товарам у нас останется пустым, позже станет ясно почему
     # path('', PostsList.as_view()),
     path('', PostsList.as_view(), name='all_news'),
     path('<int:pk>/', PostsDetail.as_view(), name='news'),
@@ -21,6 +20,10 @@ urlpatterns = [
     path('signup/', RegisterView.as_view(), name='signup'),
     path('upgrade/', upgrade_me, name='upgrade'),
     path('user/', UresView.as_view(), name='user'),
+    path('categories/', CategoryListView.as_view(), name='category_list'),
+    path('category/<int:category_id>/', PostsList.as_view(), name='posts_by_category'),
+
+
 
 
     # т.к. сам по себе это класс, то нам надо представить этот класс в виде view. Для этого вызываем метод as_view

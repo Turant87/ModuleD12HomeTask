@@ -1,9 +1,14 @@
 from django.contrib.auth.forms import UserCreationForm
+from django.core.mail import send_mail
 from django.db import models
 from django.contrib.auth.models import User
 from django.db.models import Sum
 from django import forms
 from datetime import datetime
+
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
+
 
 class Author(models.Model):
     authorUser = models.OneToOneField(User, on_delete=models.CASCADE)
@@ -24,8 +29,10 @@ class Author(models.Model):
 class Category(models.Model):
     name = models.CharField(max_length=64, unique=True)
 
+
 class Post(models.Model):
     author = models.ForeignKey(Author, on_delete=models.CASCADE)
+    # categories = models.ManyToManyField(Category, through='PostCategory')
 
     NEWS = 'NW'
     ARTICLE = 'AR'
@@ -33,11 +40,26 @@ class Post(models.Model):
         (NEWS, 'Новость'),
         (ARTICLE, 'Статья'),
     )
-    name = models.CharField(max_length=100, default='Default Name')
+    ALLINONE = 'AL'
+    POLICY = 'PL'
+    SCIENCE = 'SC'
+    TECH = 'TE'
+    ART = 'AR'
+    SPACE = 'SP'
+    POST_CATEGORY_CHOICES = (
+        (ALLINONE, 'Обо всем'),
+        (POLICY, 'Политика'),
+        (SCIENCE, 'Наука'),
+        (TECH, 'Технологии'),
+        (ART, 'Искусство'),
+        (SPACE, 'Космос'),
+    )
+
+    name = models.CharField(max_length=100, default='None')
 
     categoryType = models.CharField(max_length=2, choices=CATEGORY_CHOICES, default=ARTICLE)
     dateCreation = models.DateTimeField(auto_now_add=True)
-    postCategory = models.ManyToManyField(Category, through='PostCategory')
+    postCategory = models.CharField(max_length=2, choices=POST_CATEGORY_CHOICES, default=ALLINONE)
     title = models.CharField(max_length=128)
     text = models.TextField()
     rating = models.SmallIntegerField(default=0)
@@ -61,6 +83,10 @@ class Post(models.Model):
     def get_absolute_url(self):  # добавим абсолютный путь, чтобы после создания нас перебрасывало на страницу с товаром
         return f'/post/{self.id}'
 
+class PostForm(forms.ModelForm):
+    class Meta:
+        model = Post
+        fields = ['title', 'text', 'postCategory']
 
 class PostCategory(models.Model):
     postThrough = models.ForeignKey(Post, on_delete=models.CASCADE)
