@@ -1,25 +1,49 @@
 {% extends 'layout/base.html' %}
-{% load custom_filters %}
 
 {% block title %}
-
+    {{ request.user.username }} - Мои подписки
 {% endblock %}
 
 {% block content %}
 <div class="news-detail">
-   <h1>Добро пожаловать на новостной портал {{ request.user.username }}</h1>
+    <h1>Добро пожаловать на новостной портал, {{ request.user.username }}!</h1>
     <hr>
-    <h3>{{ request.user.first_name }} Ваши группы: </h3>
-    {% for group in user.groups.all %}
-    {{ group.name }}
-{% endfor %}
-     <hr>
-       {% if is_not_authors %}
-        <a class="btn btn-info" href="{% url 'news:upgrade' %}">Стать Автором</a>
-{% else %}
-    <h3>Вы Автор</h3>
-{% endif %}
+    <h3>{{ request.user.first_name }} Ваши группы:</h3>
+    <ul>
+        {% for group in user.groups.all %}
+            <li>{{ group.name }}</li>
+        {% endfor %}
+    </ul>
     <hr>
-   <a href="{% url 'account_logout' %}" class="btn btn-outline-danger btn-sm" role="button">Выйти</a>
+    <h3>Ваши подписки:</h3>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Категория</th>
+                <th>Действия</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for category in user.profile.subscribed_categories.all %}
+                <tr>
+                    <td>{{ category.name }}</td>
+                    <td>
+                        <form action="{% url 'news:unsubscribe' category.id %}" method="post">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger btn-sm">Отписаться</button>
+                        </form>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <hr>
+    {% if is_not_authors %}
+        <a class="btn btn-info" href="{% url 'news:upgrade' %}">Стать автором</a>
+    {% else %}
+        <h3>Вы автор</h3>
+    {% endif %}
+    <hr>
+    <a href="{% url 'account_logout' %}" class="btn btn-outline-danger btn-sm" role="button">Выйти</a>
 </div>
 {% endblock %}

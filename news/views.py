@@ -1,10 +1,14 @@
-# from django.shortcuts import render
+from django.core.mail import send_mail
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from django.shortcuts import render
 from datetime import datetime
-
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.contrib.auth.models import User
 from django.core.exceptions import PermissionDenied
 from django.http import Http404, HttpResponseRedirect
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
 from django.views.generic.edit import FormView
 from django.views.generic import ListView, DetailView, CreateView, DeleteView, UpdateView, TemplateView
 from django.contrib.auth import authenticate, login, logout
@@ -22,8 +26,6 @@ from django.contrib.auth.models import Group
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect
 
-
-
 class PostsList(ListView):
     model = Post
     template_name = 'news/all_news.html'  # Изменил имя шаблона
@@ -40,18 +42,28 @@ class PostsList(ListView):
         context['posts_with_categories'] = Post.objects.prefetch_related('categories')
         return context
 
+    # def post(self, request, *args, **kwargs):
+    #     # берём значения для нового продукта из POST-запроса, отправленного на сервер
+    #     name = request.POST['name']
+    #     title = request.POST['title']
+    #     categoryType = request.POST['categoryType']
+    #     postCategory = request.POST['postCategory']
+    #     author_name = request.POST['author']
+    #     author = get_object_or_404(Author, authorUser=author_name)
+    #     text = request.POST['text']
+    #     post = Post(author=author, name=name, title=title, categoryType=categoryType, postCategory=postCategory, text=text)  # создаём новый пост и сохраняем
+    #     post.save()
+    #     return super().get(request, *args, **kwargs)  # отправляем пользователя обратно на GET-запрос
+
     def post(self, request, *args, **kwargs):
-        # берём значения для нового продукта из POST-запроса, отправленного на сервер
-        name = request.POST['name']
-        title = request.POST['title']
-        categoryType = request.POST['categoryType']
-        postCategory = request.POST['postCategory']
-        author_name = request.POST['author']
-        author = get_object_or_404(Author, authorUser=author_name)
-        text = request.POST['text']
-        post = Post(author=author, name=name, title=title, categoryType=categoryType, text=text)  # создаём новый пост и сохраняем
-        post.save()
-        return super().get(request, *args, **kwargs)  # отправляем пользователя обратно на GET-запрос
+        form = PostForm(request.POST)
+        if form.is_valid():
+            post = form.save(commit=False)
+            post.author = get_object_or_404(Author, authorUser=request.user)
+            post.save()
+            form.save_m2m()  # Сохраняем связи многие-ко-многим
+            return HttpResponseRedirect(post.get_absolute_url())
+        return render(request, 'news/post_create.html', {'form': form})
 
     def get_queryset(self):
         category_id = self.kwargs.get('category_id')
@@ -59,14 +71,33 @@ class PostsList(ListView):
             return Post.objects.filter(postCategory=category_id)
         return Post.objects.all()
 
-    def post(self, request, *args, **kwargs):
-        form = self.form_class(request.POST)
-        if form.is_valid():
-            new_post = form.save(commit=False)
-            new_post.author = get_object_or_404(Author, authorUser=request.user)
-            new_post.save()
-            return HttpResponseRedirect(new_post.get_absolute_url())
-        return super().get(request, *args, **kwargs)
+    def create_post(request):
+        if request.method == 'POST':
+            form = PostForm(request.POST)
+            if form.is_valid():
+                post = form.save(commit=False)  # Создаем объект, но не сохраняем его в базе данных
+                post.author = request.user.author  # Предполагается, что у пользователя есть связанный объект Author
+                post.save()  # Теперь сохраняем объект в базе данных
+                post.postCategory.set(form.cleaned_data['postCategory'])  # Сохраняем связанные категории
+                return HttpResponseRedirect(post.get_absolute_url())
+        else:
+            form = PostForm()
+        return render(request, 'create_post.html', {'form': form})
+
+
+class PostsByCategory(ListView):
+    model = Post
+    template_name = 'news/posts_by_cat.html'
+    context_object_name = 'posts'
+    paginate_by = 8
+
+    # def get_queryset(self):
+    #     category_id = self.kwargs.get('id')  # Получаем значение по ключу 'id'
+    #     category = get_object_or_404(Category, id=category_id)
+    #     return Post.objects.filter(postCategory=category)
+    def get_queryset(self):
+        posts_by_category = Post.objects.filter(postCategory__id=self.kwargs['id'])
+        return posts_by_category
 
 class CategoryListView(ListView):
     model = Category
@@ -156,7 +187,6 @@ class UresView(LoginRequiredMixin, TemplateView):
         print(f"is_not_authors: {context['is_not_authors']}")
         return context
 
-
 @login_required
 def upgrade_me(request):
     user = request.user
@@ -194,20 +224,52 @@ def my_custom_permission_denied_view(request, exception):
     return render(request, 'news/403.html', status=403)
 
 
-
 def posts_by_category(request, category_id):
     # Получаем категорию по ID и связанные с ней посты
     category = get_object_or_404(Category, id=category_id)
     posts = Post.objects.filter(postCategory=category)
-    return render(request, 'news/posts_by_category.html', {'category': category, 'posts': posts})
+    return render(request, 'news/posts_by_cat.html', {'category': category, 'posts': posts})
 
+def subscribe_category(request, category_id):
+    category = get_object_or_404(Category, id=category_id)
+    category.subscribers.add(request.user)
+    return redirect('posts_by_category', category_id=category_id)
 
+@login_required
+def subscribe(request, category_id):
+    category = get_object_or_404(Category, id=category_id)
+    category.subscribe(request.user)
+    return redirect('news:all_news')  # перенаправление пользователя куда-либо после подписки
+@login_required
+def unsubscribe(request, category_id):
+    category = get_object_or_404(Category, id=category_id)
+    category.unsubscribe(request.user)
+    return redirect('news:all_news')  # перенаправление пользователя куда-либо после отписки
 
+def weekly_newsletter():
+    today = timezone.localtime(timezone.now())
+    last_week = today - timezone.timedelta(days=7)
+    categories = Category.objects.all()
 
+    for category in categories:
+        posts = category.post_set.filter(dateCreation__range=(last_week, today))
+        if posts.exists():
+            for user in category.subscribers.all():
+                subject = f'Weekly Newsletter - New Articles in {category.name}'
+                html_message = render_to_string('news/weekly_newsletter.html', {'posts': posts, 'category': category})
+                plain_message = strip_tags(html_message)
+                from_email = 'From <turant.ivan@mail.ru>'
+                to = user.email
 
+                send_mail(subject, plain_message, from_email, [to], html_message=html_message)
 
+@receiver(post_save, sender=User)
+def welcome_email(sender, instance, created, **kwargs):
+    if created:
+        subject = 'Добро пожаловать в NewsPaper!'
+        html_message = render_to_string('news/welcome_email.html', {'user': instance})
+        plain_message = strip_tags(html_message)
+        from_email = 'From <turant.ivan@yandex.ru>'
+        to = instance.email
 
-
-
-
-
+        send_mail(subject, plain_message, from_email, [to], html_message=html_message)

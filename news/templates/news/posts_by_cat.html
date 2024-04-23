@@ -3,9 +3,15 @@
 {% block content %}
 <h1>
 
-        Все новости
+        {{ category.name }}
+    <br>
+
 
 </h1>
+<h3><form action="{% url 'news:posts_by_category' category.id %}" method="post">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-primary">Подписаться на категорию</button>
+</form></h3>
 <p>Количество новостей: {{ posts|length }}</p>
 
 

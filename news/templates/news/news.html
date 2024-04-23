@@ -4,7 +4,9 @@
 {% block content %}
 <div class="news-detail">
     <h1>{{ post.title }}</h1>
-    <p>Дата создания: {{ post.dateCreation|date:"d.m.Y" }}| Категория: {{ post.get_postCategory_display }}</p>
+    <p>Дата создания: {{ post.dateCreation|date:"d.m.Y" }}| Категория: {% for category in post.postCategory.all %}
+        <a href="{% url 'news:posts_by_category' category.pk %}">{{ category.name }}</a>{% if not forloop.last %}, {% endif %}
+    {% endfor %}</p>
     <p>Автор: {{ post.author.authorUser.username }}</p>
     <p>{{ post.text|censor }}</p>
 </div>
@@ -18,3 +20,4 @@
 
 </form>
 {% endblock %}
+

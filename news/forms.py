@@ -2,7 +2,7 @@ from django.forms import ModelForm
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth.models import User
 from django.contrib.auth.models import Group
-from .models import Post, Author
+from .models import Post, Author, Category
 from django import forms
 from allauth.account.forms import SignupForm
 # Создаём модельную форму
@@ -33,7 +33,7 @@ class PostForm(ModelForm):
             'categoryType': forms.Select(attrs={
                 'class': 'form-control',
             }),
-            'postCategory': forms.Select(attrs={
+            'postCategory': forms.SelectMultiple(attrs={
                 'class': 'form-control',
             }),
             'text': forms.Textarea(attrs={
@@ -46,6 +46,8 @@ class PostForm(ModelForm):
         super(PostForm, self).__init__(*args, **kwargs)
         self.fields['author'].queryset = Author.objects.all()
         self.fields['author'].label_from_instance = lambda obj: obj.authorUser.username
+        self.fields['postCategory'].queryset = Category.objects.all()
+        self.fields['postCategory'].label_from_instance = lambda obj: obj.name
 
 
 class RegisterForm(UserCreationForm):
