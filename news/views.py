@@ -8,7 +8,10 @@ from django.contrib.auth.models import User
 from django.core.exceptions import PermissionDenied
 from django.http import Http404, HttpResponseRedirect
 from django.template.loader import render_to_string
+from django.utils.decorators import method_decorator
 from django.utils.html import strip_tags
+from django.views.decorators.cache import cache_page
+from django.views.decorators.http import last_modified
 from django.views.generic.edit import FormView
 from django.views.generic import ListView, DetailView, CreateView, DeleteView, UpdateView, TemplateView
 from django.contrib.auth import authenticate, login, logout
@@ -26,6 +29,7 @@ from django.contrib.auth.models import Group
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect
 
+@method_decorator(cache_page(60 * 5), name='dispatch')
 class PostsList(ListView):
     model = Post
     template_name = 'news/all_news.html'  # Изменил имя шаблона
@@ -137,6 +141,12 @@ class PostDeleteView(PermissionRequiredMixin, LoginRequiredMixin, DeleteView):
    #         raise Http404
    #     return obj
 
+
+def last_modified_func(post_pk):
+    return Post.objects.get(pk=post_pk).dateModified
+
+@method_decorator(cache_page(60 * 60 * 24), name='dispatch')  # Кэширование на 24 часа
+@method_decorator(last_modified(last_modified_func), name='dispatch')
 class PostsDetail(DetailView):
     model = Post
     template_name = 'news/news.html'  # Изменил имя шаблона
@@ -146,6 +156,7 @@ def search_results(request):
     news_filter = NewsFilter(request.GET, queryset=Post.objects.all())
     return render(request, 'news/search.html', {'filter': news_filter})
 
+@cache_page(60)
 def home(request):
     # Здесь может быть логика для получения данных, которые вы хотите отобразить на домашней странице
     return render(request, 'news/home.html')  # Указываете шаблон для домашней страницы

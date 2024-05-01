@@ -1,3 +1,5 @@
+from linecache import cache
+
 from django.contrib.auth.forms import UserCreationForm
 from django.core.mail import send_mail
 from django.db import models
@@ -44,6 +46,12 @@ class Category(models.Model):
 
 
 class Post(models.Model):
+    dateModified = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        cache.delete(f'PostDetailView_{self.pk}')
+
     author = models.ForeignKey(Author, on_delete=models.CASCADE)
 
 
